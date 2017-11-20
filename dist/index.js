@@ -21,21 +21,25 @@ var _reactNative = require('react-native');
 
 var _reactNative2 = _interopRequireDefault(_reactNative);
 
+var _propTypes = require('prop-types');
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
 var _reactTimerMixin = require('react-timer-mixin');
 
 var _reactTimerMixin2 = _interopRequireDefault(_reactTimerMixin);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _Dimensions$get = _reactNative.Dimensions.get('window');
-
-var width = _Dimensions$get.width;
-var height = _Dimensions$get.height;
+var _Dimensions$get = _reactNative.Dimensions.get('window'),
+    width = _Dimensions$get.width,
+    height = _Dimensions$get.height;
 
 /**
  * Default styles
  * @type {StyleSheetPropType}
  */
+
 
 var styles = _reactNative.StyleSheet.create({
   container: {
@@ -118,24 +122,25 @@ module.exports = _react2.default.createClass({
    * @type {Object}
    */
   propTypes: {
-    horizontal: _react2.default.PropTypes.bool,
-    children: _react2.default.PropTypes.node.isRequired,
+    horizontal: _propTypes2.default.bool,
+    children: _propTypes2.default.node.isRequired,
     style: _reactNative.View.propTypes.style,
-    pagingEnabled: _react2.default.PropTypes.bool,
-    showsHorizontalScrollIndicator: _react2.default.PropTypes.bool,
-    showsVerticalScrollIndicator: _react2.default.PropTypes.bool,
-    bounces: _react2.default.PropTypes.bool,
-    scrollsToTop: _react2.default.PropTypes.bool,
-    removeClippedSubviews: _react2.default.PropTypes.bool,
-    automaticallyAdjustContentInsets: _react2.default.PropTypes.bool,
-    showsPagination: _react2.default.PropTypes.bool,
-    showsButtons: _react2.default.PropTypes.bool,
-    loop: _react2.default.PropTypes.bool,
-    autoplay: _react2.default.PropTypes.bool,
-    autoplayTimeout: _react2.default.PropTypes.number,
-    autoplayDirection: _react2.default.PropTypes.bool,
-    index: _react2.default.PropTypes.number,
-    renderPagination: _react2.default.PropTypes.func
+    pagingEnabled: _propTypes2.default.bool,
+    showsHorizontalScrollIndicator: _propTypes2.default.bool,
+    showsVerticalScrollIndicator: _propTypes2.default.bool,
+    bounces: _propTypes2.default.bool,
+    scrollsToTop: _propTypes2.default.bool,
+    removeClippedSubviews: _propTypes2.default.bool,
+    automaticallyAdjustContentInsets: _propTypes2.default.bool,
+    showsPagination: _propTypes2.default.bool,
+    showsButtons: _propTypes2.default.bool,
+    loop: _propTypes2.default.bool,
+    autoplay: _propTypes2.default.bool,
+    autoplayTimeout: _propTypes2.default.number,
+    autoplayDirection: _propTypes2.default.bool,
+    index: _propTypes2.default.number,
+    renderPagination: _propTypes2.default.func,
+    onScroll: _propTypes2.default.func
   },
 
   mixins: [_reactTimerMixin2.default],
@@ -285,6 +290,14 @@ module.exports = _react2.default.createClass({
       _this3.props.onMomentumScrollEnd && _this3.props.onMomentumScrollEnd(e, _this3.state, _this3);
     });
   },
+  onScroll: function onScroll(e) {
+    this.props.onScroll({ x: e.nativeEvent.contentOffset.x });
+  },
+  onAndroidScroll: function onAndroidScroll(e) {
+    var event = e.nativeEvent;
+    var x = event.position * this.state.width + event.offset * this.state.width;
+    this.props.onScroll({ x: x });
+  },
 
 
   /**
@@ -424,7 +437,7 @@ module.exports = _react2.default.createClass({
       button = this.props.nextButton || _react2.default.createElement(
         _reactNative.Text,
         { style: styles.buttonText },
-        '›'
+        '\u203A'
       );
     }
 
@@ -449,7 +462,7 @@ module.exports = _react2.default.createClass({
       button = this.props.prevButton || _react2.default.createElement(
         _reactNative.Text,
         { style: styles.buttonText },
-        '‹'
+        '\u2039'
       );
     }
 
@@ -481,7 +494,10 @@ module.exports = _react2.default.createClass({
         contentContainerStyle: [styles.wrapper, this.props.style],
         contentOffset: this.state.offset,
         onScrollBeginDrag: this.onScrollBegin,
-        onMomentumScrollEnd: this.onScrollEnd }),
+        onMomentumScrollEnd: this.onScrollEnd,
+        onScroll: this.onScroll,
+        scrollEventThrottle: 16
+      }),
       pages
     );
     return _react2.default.createElement(
@@ -490,7 +506,9 @@ module.exports = _react2.default.createClass({
       }, this.props, {
         initialPage: this.state.index,
         onPageSelected: this.onScrollEnd,
-        style: { flex: 1 } }),
+        style: { flex: 1 },
+        onPageScroll: this.onAndroidScroll
+      }),
       pages
     );
   },
@@ -513,7 +531,7 @@ module.exports = _react2.default.createClass({
 
     for (var prop in props) {
       // if(~scrollResponders.indexOf(prop)
-      if (typeof props[prop] === 'function' && prop !== 'onMomentumScrollEnd' && prop !== 'renderPagination' && prop !== 'onScrollBeginDrag') {
+      if (typeof props[prop] === 'function' && prop !== 'onMomentumScrollEnd' && prop !== 'renderPagination' && prop !== 'onScrollBeginDrag' && prop !== 'onScroll') {
         (function () {
           var originResponder = props[prop];
           props[prop] = function (e) {

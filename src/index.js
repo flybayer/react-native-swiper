@@ -2,7 +2,7 @@
  * react-native-swiper
  * @author leecade<leecade@163.com>
  */
-import React from 'react'
+import React, { Component } from 'react'
 import ReactNative, {
   StyleSheet,
   Text,
@@ -13,13 +13,7 @@ import ReactNative, {
   ViewPagerAndroid,
   Platform
 } from 'react-native'
-
-// Using bare setTimeout, setInterval, setImmediate
-// and requestAnimationFrame calls is very dangerous
-// because if you forget to cancel the request before
-// the component is unmounted, you risk the callback
-// throwing an exception.
-import TimerMixin from 'react-timer-mixin'
+import PropTypes from 'prop-types';
 
 let { width, height } = Dimensions.get('window')
 
@@ -99,43 +93,40 @@ let styles = StyleSheet.create({
 
 // missing `module.exports = exports['default'];` with babel6
 // export default React.createClass({
-module.exports = React.createClass({
+export default class extends Component {
 
   /**
    * Props Validation
    * @type {Object}
    */
-  propTypes: {
-    horizontal                       : React.PropTypes.bool,
-    children                         : React.PropTypes.node.isRequired,
+ static propTypes = {
+    horizontal                       : PropTypes.bool,
+    children                         : PropTypes.node.isRequired,
     style                            : View.propTypes.style,
-    pagingEnabled                    : React.PropTypes.bool,
-    showsHorizontalScrollIndicator   : React.PropTypes.bool,
-    showsVerticalScrollIndicator     : React.PropTypes.bool,
-    bounces                          : React.PropTypes.bool,
-    scrollsToTop                     : React.PropTypes.bool,
-    removeClippedSubviews            : React.PropTypes.bool,
-    automaticallyAdjustContentInsets : React.PropTypes.bool,
-    showsPagination                  : React.PropTypes.bool,
-    showsButtons                     : React.PropTypes.bool,
-    loop                             : React.PropTypes.bool,
-    autoplay                         : React.PropTypes.bool,
-    autoplayTimeout                  : React.PropTypes.number,
-    autoplayDirection                : React.PropTypes.bool,
-    index                            : React.PropTypes.number,
-    renderPagination                 : React.PropTypes.func,
-    onScroll                         : React.PropTypes.func,
-  },
-
-  mixins: [TimerMixin],
+    pagingEnabled                    : PropTypes.bool,
+    showsHorizontalScrollIndicator   : PropTypes.bool,
+    showsVerticalScrollIndicator     : PropTypes.bool,
+    bounces                          : PropTypes.bool,
+    scrollsToTop                     : PropTypes.bool,
+    removeClippedSubviews            : PropTypes.bool,
+    automaticallyAdjustContentInsets : PropTypes.bool,
+    showsPagination                  : PropTypes.bool,
+    showsButtons                     : PropTypes.bool,
+    loop                             : PropTypes.bool,
+    autoplay                         : PropTypes.bool,
+    autoplayTimeout                  : PropTypes.number,
+    autoplayDirection                : PropTypes.bool,
+    index                            : PropTypes.number,
+    renderPagination                 : PropTypes.func,
+    onScroll                         : PropTypes.func,
+  }
 
   /**
    * Default props
    * @return {object} props
    * @see http://facebook.github.io/react-native/docs/scrollview.html
    */
-  getDefaultProps() {
-    return {
+ static defaultProps = {
       horizontal                       : true,
       pagingEnabled                    : true,
       showsHorizontalScrollIndicator   : false,
@@ -152,35 +143,36 @@ module.exports = React.createClass({
       autoplayDirection                : true,
       index                            : 0,
     }
-  },
 
   /**
    * Init states
    * @return {object} states
    */
-  getInitialState() {
-    return this.initState(this.props)
-  },
+  state = this.initState(this.props)
 
   /**
    * autoplay timer
    * @type {null}
    */
-  autoplayTimer: null,
+  autoplayTimer = null
 
-  componentWillMount() {
+  componentWillMount = () => {
     this.props = this.injectState(this.props)
-  },
+  }
 
-  componentWillReceiveProps(props) {
+  componentWillReceiveProps = (props) => {
     this.setState(this.initState(props))
-  },
+  }
 
-  componentDidMount() {
+  componentDidMount = () => {
     this.autoplay()
-  },
+  }
 
-  initState(props) {
+  componentWillUnmount = () => {
+    this.autoplayTimer && clearTimeout(this.autoplayTimer)
+  }
+
+  initState (props) {
     let initState = {
       isScrolling: false,
       autoplayEnd: false,
@@ -205,12 +197,12 @@ module.exports = React.createClass({
         : initState.width * setup
     }
     return initState
-  },
+  }
 
   /**
    * Automatic rolling
    */
-  autoplay() {
+  autoplay = () => {
     if(!Array.isArray(this.props.children)
       || !this.props.autoplay
       || this.state.isScrolling
@@ -218,7 +210,7 @@ module.exports = React.createClass({
 
     clearTimeout(this.autoplayTimer)
 
-    this.autoplayTimer = this.setTimeout(() => {
+    this.autoplayTimer = setTimeout(() => {
       if(!this.props.loop && (this.props.autoplayDirection
           ? this.state.index == this.state.total - 1
           : this.state.index == 0)) return this.setState({
@@ -226,28 +218,28 @@ module.exports = React.createClass({
       })
       this.scrollTo(this.props.autoplayDirection ? 1 : -1)
     }, this.props.autoplayTimeout * 1000)
-  },
+  }
 
   /**
    * Scroll begin handle
    * @param  {object} e native event
    */
-  onScrollBegin(e) {
+  onScrollBegin = (e) => {
     // update scroll state
     this.setState({
       isScrolling: true
     })
 
-    this.setTimeout(() => {
+    setTimeout(() => {
       this.props.onScrollBeginDrag && this.props.onScrollBeginDrag(e, this.state, this)
     })
-  },
+  }
 
   /**
    * Scroll end handle
    * @param  {object} e native event
    */
-  onScrollEnd(e) {
+  onScrollEnd = (e) => {
     // update scroll state
     this.setState({
       isScrolling: false
@@ -266,23 +258,23 @@ module.exports = React.createClass({
 
     // Note: `this.setState` is async, so I call the `onMomentumScrollEnd`
     // in setTimeout to ensure synchronous update `index`
-    this.setTimeout(() => {
+    setTimeout(() => {
       this.autoplay()
 
       // if `onMomentumScrollEnd` registered will be called here
       this.props.onMomentumScrollEnd && this.props.onMomentumScrollEnd(e, this.state, this)
     })
-  },
+  }
 
-  onScroll(e) {
+  onScroll = (e) => {
     this.props.onScroll({ x: e.nativeEvent.contentOffset.x });
-  },
+  }
 
-  onAndroidScroll(e) {
+  onAndroidScroll = (e) => {
     const event = e.nativeEvent;
     const x = event.position * this.state.width + event.offset * this.state.width;
     this.props.onScroll({ x });
-  },
+  }
 
 
   /**
@@ -290,7 +282,7 @@ module.exports = React.createClass({
    * @param  {object} offset content offset
    * @param  {string} dir    'x' || 'y'
    */
-  updateIndex(offset, dir) {
+  updateIndex = (offset, dir) => {
 
     let state = this.state
     let index = state.index
@@ -319,13 +311,13 @@ module.exports = React.createClass({
       index: index,
       offset: offset,
     })
-  },
+  }
 
   /**
    * Scroll by index
    * @param  {number} index offset index
    */
-  scrollTo(index) {
+  scrollTo = (index) => {
     if (this.state.isScrolling || this.state.total < 2) return
     let state = this.state
     let diff = (this.props.loop ? 1 : 0) + index + this.state.index
@@ -351,7 +343,7 @@ module.exports = React.createClass({
 
     // trigger onScrollEnd manually in android
     if (Platform.OS === 'android') {
-      this.setTimeout(() => {
+      setTimeout(() => {
         this.onScrollEnd({
           nativeEvent: {
             position: diff,
@@ -360,13 +352,13 @@ module.exports = React.createClass({
       }, 50);
     }
 
-  },
+  }
 
   /**
    * Render pagination
    * @return {object} react-dom
    */
-  renderPagination() {
+  renderPagination = () => {
 
     // By default, dots only show when `total` > 2
     if(this.state.total <= 1) return null
@@ -406,9 +398,9 @@ module.exports = React.createClass({
         {dots}
       </View>
     )
-  },
+  }
 
-  renderTitle() {
+  renderTitle = () => {
     let child = this.props.children[this.state.index]
     let title = child && child.props.title
     return title
@@ -418,9 +410,9 @@ module.exports = React.createClass({
         </View>
       )
       : null
-  },
+  }
 
-  renderNextButton() {
+  renderNextButton = () => {
     let button;
 
     if (this.props.loop || this.state.index != this.state.total - 1) {
@@ -434,9 +426,9 @@ module.exports = React.createClass({
         </View>
       </TouchableOpacity>
     )
-  },
+  }
 
-  renderPrevButton() {
+  renderPrevButton = () => {
     let button = null
 
     if (this.props.loop || this.state.index != 0) {
@@ -450,17 +442,18 @@ module.exports = React.createClass({
         </View>
       </TouchableOpacity>
     )
-  },
+  }
 
-  renderButtons() {
+  renderButtons = () => {
     return (
       <View pointerEvents='box-none' style={[styles.buttonWrapper, {width: this.state.width, height: this.state.height}, this.props.buttonWrapperStyle]}>
         {this.renderPrevButton()}
         {this.renderNextButton()}
       </View>
     )
-  },
-  renderScrollView(pages) {
+  }
+
+  renderScrollView = (pages) => {
      if (Platform.OS === 'ios')
          return (
             <ScrollView ref="scrollView"
@@ -486,13 +479,14 @@ module.exports = React.createClass({
             {pages}
          </ViewPagerAndroid>
       );
-  },
+  }
+
   /**
    * Inject state to ScrollResponder
    * @param  {object} props origin props
    * @return {object} props injected props
    */
-  injectState(props) {
+  injectState = (props) => {
 /*    const scrollResponders = [
       'onMomentumScrollBegin',
       'onTouchStartCapture',
@@ -515,7 +509,7 @@ module.exports = React.createClass({
     }
 
     return props
-  },
+  }
 
   /**
    * Default render
@@ -564,4 +558,4 @@ module.exports = React.createClass({
       </View>
     )
   }
-})
+}
